@@ -1,4 +1,3 @@
-from typing import Optional
 from square import SquarePosition, File
 from move import Move, NormalMove, Castling
 from piece import PieceColor, PieceType, Piece
@@ -143,10 +142,12 @@ class Board:
 
     def to_image(
         self,
-        img_dims: (int, int) = (IMG_SIZE, IMG_SIZE),
-        sq_dims: (int, int) = (SQUARE_SIZE, SQUARE_SIZE),
-        squares_to_color: dict[SquarePosition, (int, int, int, int)] = {},
+        img_dims: tuple[int, int] = (IMG_SIZE, IMG_SIZE),
+        sq_dims: tuple[int, int] = (SQUARE_SIZE, SQUARE_SIZE),
+        squares_to_color: dict[SquarePosition, tuple[int, int, int, int]] = None,
     ):
+        if squares_to_color is None:
+            squares_to_color = {}
         img = Image.new("RGBA", img_dims, (0, 0, 0, 255))
         for k, sq in enumerate(self.config):
             i = k // 8
@@ -176,7 +177,7 @@ class Board:
         self.config[from_i] = None
         self.config[to_i] = p
 
-    def move_piece(self, move: Move) -> Optional[Move]:
+    def move_piece(self, move: Move) -> None | Move:
         inner = None
         m = move.copy()  # copy because we'll be modifying the inner and returning the move which is fully equipped with all the info
         if m.is_normal_move():
@@ -187,7 +188,7 @@ class Board:
             return None
         return Move(inner)
 
-    def move_normal(self, move: NormalMove, turn: PieceColor) -> Optional[NormalMove]:
+    def move_normal(self, move: NormalMove, turn: PieceColor) -> None | NormalMove:
         from_ = move.from_
         to = move.to
         is_capture = move.is_capture
@@ -309,7 +310,7 @@ class Board:
         move.from_ = ps
         return move
 
-    def castle(self, move: Castling, turn: PieceColor) -> Optional[Castling]:
+    def castle(self, move: Castling, turn: PieceColor) -> None | Castling:
         if not self.can_castle[turn][move] or self.is_check(turn):
             return False
         rank = 1 if turn == PieceColor.White else 8
@@ -563,7 +564,7 @@ class Board:
         self,
         turn,
         to: SquarePosition,
-        from_: Optional[SquarePosition] = None,
+        from_: None | SquarePosition = None,
         ptype: PieceType = PieceType.Pawn,
         is_capture: bool = False,
     ):
@@ -628,7 +629,7 @@ class Board:
         self,
         turn,
         to: SquarePosition,
-        from_: Optional[SquarePosition] = None,
+        from_: None | SquarePosition = None,
         ptype: PieceType = PieceType.Knight,
         is_capture: bool = False,
     ):
@@ -674,7 +675,7 @@ class Board:
         self,
         turn,
         to: SquarePosition,
-        from_: Optional[SquarePosition] = None,
+        from_: None | SquarePosition = None,
         ptype: PieceType = PieceType.Rook,
         is_capture: bool = False,
     ):
@@ -798,7 +799,7 @@ class Board:
         self,
         turn,
         to: SquarePosition,
-        from_: Optional[SquarePosition] = None,
+        from_: None | SquarePosition = None,
         ptype: PieceType = PieceType.Bishop,
         is_capture: bool = False,
     ):

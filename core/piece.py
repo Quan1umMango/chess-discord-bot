@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum
+from enum import IntEnum
 
 
 class PieceColor(IntEnum):
@@ -15,24 +15,19 @@ class PieceColor(IntEnum):
         return PieceColor(1 - self)
 
 
-class PieceType(Enum):
-    Null = (0,)
-    Pawn = (1,)
-    Knight = (3,)
-    Rook = (4,)
-    Bishop = (5,)
-    Queen = (6,)
-    King = 7
+class PieceType(IntEnum):
+    Pawn = 1
+    Knight = 2
+    Rook = 3
+    Bishop = 4
+    King = 5
+    Queen = 6
 
 
 class Piece:
     def __init__(self, piece_type: PieceType, color: PieceColor):
         self.type = piece_type
         self.color = color
-
-    @staticmethod
-    def null():
-        return Piece(PieceType.Null, 0)
 
     @staticmethod
     def pawn(color: PieceColor):

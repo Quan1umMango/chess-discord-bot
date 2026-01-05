@@ -16,18 +16,7 @@ BLACK_PIECES = Image.open("./assets/BlackPieces_Wood.png")
 BLACK_PIECES.convert("RGBA")
 PIECE_IMAGES = {}
 
-for i, p_name in enumerate(
-    [
-        PieceType.Pawn,
-        PieceType.Knight,
-        PieceType.Rook,
-        PieceType.Bishop,
-        PieceType.King,
-        PieceType.Queen,
-    ]
-):
-    if p_name == PieceType.Null:
-        continue
+for i, p_name in enumerate(sorted(PieceType)):
     start = (i) * 16
     end = (i + 1) * 16
     white = WHITE_PIECES.crop((start, 0, end, 16))

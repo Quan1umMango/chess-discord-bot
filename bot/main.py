@@ -1,4 +1,3 @@
-from typing import Optional
 import uuid
 
 import discord
@@ -30,26 +29,33 @@ async def validate_user(to_id, ctx) -> bool:
     return True
 
 
-class DrawView(discord.ui.View):
-    def __init__(self, dodraw, user_id):
+class BaseView(discord.ui.View):
+    def __init__(self, user_id, timeout=TIMEOUT):
         super().__init__(timeout=TIMEOUT)
-        self.dodraw = dodraw
         self.user_id = user_id
+
+    async def interaction_check(self, interaction) -> bool:
+        if self.user_id != interaction.user.id:
+            await interaction.response.send_message(
+                "This interaction is not for you", ephemeral=True
+            )
+            return False
+        return True
+
+
+class DrawView(BaseView):
+    def __init__(self, dodraw, user_id):
+        super().__init__(user_id)
+        self.dodraw = dodraw
 
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.success)
     async def accept(self, ctx, button: discord.ui.Button):
-        if not await validate_user(self.user_id, ctx):
-            return
-
         self.disable_all()
         await self.dodraw()
         await ctx.response.edit_message(content="Drew Successfully", view=self)
 
     @discord.ui.button(label="Reject", style=discord.ButtonStyle.danger)
     async def reject(self, ctx, button: discord.ui.Button):
-        if not await validate_user(self.user_id, ctx):
-            return
-
         self.disable_all()
         await ctx.response.edit_message(content="Draw rejected.", view=self)
 
@@ -58,26 +64,20 @@ class DrawView(discord.ui.View):
             child.disabled = True
 
 
-class GameOptionView(discord.ui.View):
+class GameOptionView(BaseView):
     def __init__(self, user_id, on_accept):
-        super().__init__(timeout=TIMEOUT)
+        super().__init__(user_id)
         self.user_id = user_id
         self.on_accept = on_accept
 
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.success)
     async def accept(self, ctx, button: discord.ui.Button):
-        if not await validate_user(self.user_id, ctx):
-            return
-
         self.disable_all()
         await self.on_accept()
         await ctx.response.edit_message(content="Game Accepted!", view=self)
 
     @discord.ui.button(label="Reject", style=discord.ButtonStyle.danger)
     async def reject(self, ctx, button: discord.ui.Button):
-        if not await validate_user(self.user_id, ctx):
-            return
-
         self.disable_all()
         await ctx.response.edit_message(content="Game Declined.", view=self)
 
@@ -86,24 +86,18 @@ class GameOptionView(discord.ui.View):
             child.disabled = True
 
 
-class ResignButton(discord.ui.View):
+class ResignButton(BaseView):
     def __init__(self, onresign, user_id):
-        super().__init__(timeout=TIMEOUT)
+        super().__init__(user_id)
         self.onresign = onresign
-        self.user_id = user_id
 
     @discord.ui.button(label="Resign", style=discord.ButtonStyle.danger)
     async def resign(self, ctx, button: discord.ui.Button):
-        if ctx.user.id != self.user_id:
-            await ctx.followup.send(
-                content="This button is not meant for you, silly", ephemeral=True
-            )
-            return
         await self.onresign()
 
 
 class GameSession(gamemod.Game):
-    def __init__(self, player1: discord.User, player2: discord.User, msg=None):
+    def __init__(self, player1: discord.Member, player2: discord.Member, msg=None):
         super().__init__()
         self.id = uuid.uuid4()
         self.player1 = player1
@@ -121,7 +115,7 @@ class GameSession(gamemod.Game):
         )
         return needed == self.turn
 
-    def last_move(self) -> Optional[movemod.Move]:
+    def last_move(self) -> None | movemod.Move:
         if self.played_moves:
             return self.played_moves[-1][1]
 
@@ -324,7 +318,7 @@ class Chess(commands.Cog):
 
     @app_commands.command(description="Get a user's stats")
     @app_commands.describe(user="User to get data of. Leave blank to get your own data")
-    async def profile(self, ctx, user: Optional[discord.User]):
+    async def profile(self, ctx, user: None | discord.User):
         await ctx.response.defer()
         p = user if user else ctx.user
         p_data = chessdb.PlayerData.from_id(p.id) or chessdb.PlayerData(p.id)
@@ -373,7 +367,7 @@ class Chess(commands.Cog):
         else:
             await self._update_game_embed(ctx, game)
 
-    async def _try_get_game_of_user(self, ctx) -> Optional[GameSession]:
+    async def _try_get_game_of_user(self, ctx) -> None | GameSession:
         if ctx.user.id not in users_to_gameid:
             await self._try_load_active_game_from_user_id(ctx.user.id)
 

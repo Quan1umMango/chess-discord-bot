@@ -42,6 +42,9 @@ class BaseView(discord.ui.View):
             return False
         return True
 
+    def disable_all(self):
+        for child in self.children:
+            child.disabled = True
 
 class DrawView(BaseView):
     def __init__(self, dodraw, user_id):
@@ -58,10 +61,6 @@ class DrawView(BaseView):
     async def reject(self, ctx, button: discord.ui.Button):
         self.disable_all()
         await ctx.response.edit_message(content="Draw rejected.", view=self)
-
-    def disable_all(self):
-        for child in self.children:
-            child.disabled = True
 
 
 class GameOptionView(BaseView):
@@ -81,9 +80,7 @@ class GameOptionView(BaseView):
         self.disable_all()
         await ctx.response.edit_message(content="Game Declined.", view=self)
 
-    def disable_all(self):
-        for child in self.children:
-            child.disabled = True
+
 
 
 class ResignButton(BaseView):
@@ -93,7 +90,9 @@ class ResignButton(BaseView):
 
     @discord.ui.button(label="Resign", style=discord.ButtonStyle.danger)
     async def resign(self, ctx, button: discord.ui.Button):
+        self.disable_all()
         await self.onresign()
+        await ctx.response.edit_message(content="Resigned",view=self)
 
 
 class GameSession(gamemod.Game):
@@ -198,11 +197,9 @@ class Chess(commands.Cog):
             return
         await self._try_load_active_game_from_user_id(ctx.user.id)
 
-        """
         if against.id == ctx.user.id:
             await ctx.followup.send('❌ Cant play against yourself silly')
             return 
-        """
 
         if against.bot:
             await ctx.followup.send("❌ Cant play against a bot, silly")

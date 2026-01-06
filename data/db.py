@@ -33,7 +33,6 @@ class PlayerData:
 
     def update_db(self) -> bool:
         d = self.__dict__
-        print("yay")
         _id = d.pop("user_id")
         return _players.update_one({"_id": _id}, {"$set": d}, upsert=True).acknowledged
 

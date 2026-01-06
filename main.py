@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("./bot")
+#sys.path.append("./bot")
 sys.path.append("./core")
 
 import discord
@@ -23,9 +23,9 @@ client = commands.Bot(command_prefix="!", intents=intents)
 @client.event
 async def setup_hook():
 
-    import bot.main
+    import bot.client as botmod
 
-    await client.add_cog(bot.main.Chess(client))
+    await client.add_cog(botmod.Chess(client))
  
     for g in guild_ids:
         obj = discord.Object(id=g)
